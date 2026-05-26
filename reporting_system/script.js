@@ -3,6 +3,10 @@ let reports =
 
 let editingId = null;
 
+let currentPage = 1;
+
+const reportsPerPage = 5;
+
 function currentUser(){
 
     return JSON.parse(
@@ -177,7 +181,23 @@ function renderReports(){
         );
     });
 
-    filtered.forEach(r => {
+    const totalPages =
+        Math.ceil(filtered.length / reportsPerPage);
+
+    if(currentPage > totalPages){
+        currentPage = totalPages || 1;
+    }
+
+    const start =
+        (currentPage - 1) * reportsPerPage;
+
+    const end =
+        start + reportsPerPage;
+
+    const paginatedReports =
+        filtered.slice(start, end);
+
+    paginatedReports.forEach(r => {
 
         const tr = document.createElement("tr");
 
@@ -225,6 +245,10 @@ function renderReports(){
 
         tbody.appendChild(tr);
     });
+
+    document.getElementById("pageInfo")
+        .innerText =
+        `Page ${currentPage} of ${totalPages || 1}`;
 }
 
 function editReport(id){
@@ -366,6 +390,29 @@ async function exportPDF(id){
     doc.text(report.description || "-", 20, 120);
 
     doc.save(`report_${report.id}.pdf`);
+}
+
+function nextPage(){
+
+    const totalPages =
+        Math.ceil(reports.length / reportsPerPage);
+
+    if(currentPage < totalPages){
+
+        currentPage++;
+
+        renderReports();
+    }
+}
+
+function prevPage(){
+
+    if(currentPage > 1){
+
+        currentPage--;
+
+        renderReports();
+    }
 }
 
 if(localStorage.getItem("loggedUser")){
