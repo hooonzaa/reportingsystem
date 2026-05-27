@@ -1,244 +1,188 @@
-let reports =
-    JSON.parse(localStorage.getItem("reports")) || [];
+/////////////////////////////
+// ENUM
+/////////////////////////////
+
+const Severity = Object.freeze({
+    LOW: "Low",
+    MEDIUM: "Medium",
+    HIGH: "High"
+});
+
+/////////////////////////////
+// USERS
+/////////////////////////////
+
+const USERS = [
+    { username: "Eliáš", password: "Heslo1" },
+    { username: "Švarc", password: "Heslo2" },
+    { username: "Gras", password: "Heslo3" }
+];
+
+/////////////////////////////
+// CLASS
+/////////////////////////////
+
+class Report {
+    constructor(name, type, severity, description, user) {
+        this.id = Date.now();
+        this.name = name;
+        this.type = type;
+        this.severity = severity;
+        this.description = description;
+        this.timestamp = new Date().toISOString();
+        this.user = user;
+    }
+}
+
+/////////////////////////////
+// DATA
+/////////////////////////////
+
+let reports = JSON.parse(localStorage.getItem("reports")) || [];
 
 let editingId = null;
+let deleteId = null;
 
 let currentPage = 1;
+let reportsPerPage = parseInt(localStorage.getItem("reportsPerPage")) || 5;
 
-const reportsPerPage = 5;
-
-function currentUser(){
-
-    return JSON.parse(
-        localStorage.getItem("loggedUser")
-    );
-}
+/////////////////////////////
+// LOGIN
+/////////////////////////////
 
 function login(){
 
-    const username =
-        document.getElementById("username").value;
+    const u = document.getElementById("username");
+    const p = document.getElementById("password");
+    const err = document.getElementById("loginError");
 
-    const password =
-        document.getElementById("password").value;
+    err.innerText = "";
 
-    if(!username || !password){
+    const user = USERS.find(x =>
+        x.username === u.value && x.password === p.value
+    );
 
-        alert("Fill all fields");
+    if(!user){
+        err.innerText = "Incorrect username or password.";
+        u.classList.add("input-error");
+        p.classList.add("input-error");
         return;
     }
 
-    localStorage.setItem(
-        "loggedUser",
-        JSON.stringify({ username })
-    );
-
+    localStorage.setItem("loggedUser", JSON.stringify({username:u.value}));
     showApp();
 }
 
 function logout(){
-
     localStorage.removeItem("loggedUser");
-
     location.reload();
 }
 
+function currentUser(){
+    return JSON.parse(localStorage.getItem("loggedUser"));
+}
+
 function showApp(){
+    loginSection.classList.add("hidden");
+    appSection.classList.remove("hidden");
 
-    document.getElementById("loginSection")
-        .classList.add("hidden");
-
-    document.getElementById("appSection")
-        .classList.remove("hidden");
+    reportsPerPageSelect.value = reportsPerPage;
 
     renderReports();
 }
+
+/////////////////////////////
+// SAVE
+/////////////////////////////
 
 function saveReport(){
 
-    const name =
-        document.getElementById("reportName").value;
+    reports.push(new Report(
+        reportName.value,
+        reportType.value,
+        reportSeverity.value,
+        reportDescription.value,
+        currentUser().username
+    ));
 
-    const type =
-        document.getElementById("reportType").value;
-
-    const severity =
-        document.getElementById("reportSeverity").value;
-
-    const description =
-        document.getElementById("reportDescription").value;
-
-    if(!name || !type || !severity){
-
-        alert("Please fill required fields");
-        return;
-    }
-
-    const report = {
-
-        id: Date.now(),
-
-        name,
-
-        type,
-
-        severity,
-
-        description,
-
-        timestamp: new Date().toISOString(),
-
-        user: currentUser().username
-    };
-
-    reports.push(report);
-
-    localStorage.setItem(
-        "reports",
-        JSON.stringify(reports)
-    );
-
-    clearForm();
-
+    localStorage.setItem("reports", JSON.stringify(reports));
     renderReports();
 }
 
-function clearForm(){
+/////////////////////////////
+// PAGINATION
+/////////////////////////////
 
-    document.getElementById("reportName").value = "";
-    document.getElementById("reportType").value = "";
-    document.getElementById("reportSeverity").value = "";
-    document.getElementById("reportDescription").value = "";
+function changeReportsPerPage(){
+    reportsPerPage = +reportsPerPageSelect.value;
+    localStorage.setItem("reportsPerPage", reportsPerPage);
+    currentPage = 1;
+    renderReports();
 }
+
+function nextPage(){
+    currentPage++;
+    renderReports();
+}
+
+function prevPage(){
+    currentPage--;
+    renderReports();
+}
+
+/////////////////////////////
+// RENDER
+/////////////////////////////
 
 function renderReports(){
 
-    const tbody =
-        document.getElementById("reportTable");
-
+    const tbody = document.getElementById("reportTable");
     tbody.innerHTML = "";
 
-    const filterName =
-        document.getElementById("filterName")
-        .value.toLowerCase();
+    const name = filterName.value.toLowerCase().trim();
+    const type = filterType.value.toLowerCase().trim();
+    const user = filterUser.value.toLowerCase().trim();
+    const desc = filterDescription.value.toLowerCase().trim();
+    const severity = filterSeverity.value;
 
-    const filterType =
-        document.getElementById("filterType")
-        .value.toLowerCase();
-
-    const filterSeverity =
-        document.getElementById("filterSeverity")
-        .value;
-
-    const filterFrom =
-        document.getElementById("filterFrom")
-        .value;
-
-    const filterTo =
-        document.getElementById("filterTo")
-        .value;
-
-    const globalFilter =
-        document.getElementById("globalFilter")
-        .value;
-
-    let filtered = reports.filter(r => {
-
-        const matchName =
-            r.name.toLowerCase()
-            .includes(filterName);
-
-        const matchType =
-            r.type.toLowerCase()
-            .includes(filterType);
-
-        const matchSeverity =
-            !filterSeverity ||
-            r.severity === filterSeverity;
-
-        const reportDate =
-            new Date(r.timestamp);
-
-        const matchFrom =
-            !filterFrom ||
-            reportDate >= new Date(filterFrom);
-
-        const matchTo =
-            !filterTo ||
-            reportDate <= new Date(filterTo + "T23:59:59");
-
-        const matchUser =
-            globalFilter === "all" ||
-            r.user === currentUser().username;
+    const filtered = reports.filter(r => {
 
         return (
-            matchName &&
-            matchType &&
-            matchSeverity &&
-            matchFrom &&
-            matchTo &&
-            matchUser
+            (!name || r.name.toLowerCase().includes(name)) &&
+            (!type || r.type.toLowerCase().includes(type)) &&
+            (!user || r.user.toLowerCase().includes(user)) &&
+            (!desc || r.description.toLowerCase().includes(desc)) &&
+            (!severity || r.severity === severity)
         );
     });
 
-    const totalPages =
-        Math.ceil(filtered.length / reportsPerPage);
+    const totalPages = Math.max(1, Math.ceil(filtered.length / reportsPerPage));
 
-    if(currentPage > totalPages){
-        currentPage = totalPages || 1;
-    }
+    if(currentPage > totalPages) currentPage = totalPages;
+    if(currentPage < 1) currentPage = 1;
 
-    const start =
-        (currentPage - 1) * reportsPerPage;
+    const start = (currentPage-1)*reportsPerPage;
+    const pageItems = filtered.slice(start, start+reportsPerPage);
 
-    const end =
-        start + reportsPerPage;
+    pageItems.forEach(r => {
 
-    const paginatedReports =
-        filtered.slice(start, end);
-
-    paginatedReports.forEach(r => {
+        const sev = r.severity.toLowerCase();
 
         const tr = document.createElement("tr");
 
         tr.innerHTML = `
-
             <td>${r.id}</td>
-
             <td>${r.name}</td>
-
             <td>${r.type}</td>
-
-            <td>
-                <span class="badge ${r.severity.toLowerCase()}">
-                    ${r.severity}
-                </span>
-            </td>
-
-            <td>
-                ${new Date(r.timestamp).toLocaleString()}
-            </td>
-
+            <td><span class="badge ${sev}">${r.severity}</span></td>
+            <td>${new Date(r.timestamp).toLocaleString()}</td>
             <td>${r.description}</td>
-
             <td>${r.user}</td>
-
             <td class="actions">
 
-                <button onclick="editReport(${r.id})">
-                    Edit
-                </button>
-
-                <button class="delete-btn"
-                    onclick="deleteReport(${r.id})">
-
-                    Delete
-
-                </button>
-
-                <button onclick="exportPDF(${r.id})">
-                    PDF
-                </button>
+                <button onclick="editReport(${r.id})">Edit</button>
+                <button class="delete-btn" onclick="openDelete(${r.id})">Delete</button>
+                <button class="pdf-btn" onclick="exportPDF(${r.id})">PDF</button>
 
             </td>
         `;
@@ -246,174 +190,100 @@ function renderReports(){
         tbody.appendChild(tr);
     });
 
-    document.getElementById("pageInfo")
-        .innerText =
-        `Page ${currentPage} of ${totalPages || 1}`;
+    pageInfo.innerText = `Page ${currentPage} of ${totalPages}`;
 }
+
+/////////////////////////////
+// EDIT
+/////////////////////////////
 
 function editReport(id){
 
-    const report =
-        reports.find(r => r.id === id);
-
-    if(!report) return;
+    const r = reports.find(x => x.id === id);
+    if(!r) return;
 
     editingId = id;
 
-    document.getElementById("editName").value =
-        report.name;
+    editName.value = r.name;
+    editType.value = r.type;
+    editSeverity.value = r.severity;
+    editDescription.value = r.description;
 
-    document.getElementById("editType").value =
-        report.type;
-
-    document.getElementById("editSeverity").value =
-        report.severity;
-
-    document.getElementById("editDescription").value =
-        report.description;
-
-    document.getElementById("editModal")
-        .classList.remove("hidden");
+    editModal.classList.remove("hidden");
 }
 
-function closeModal(){
-
-    document.getElementById("editModal")
-        .classList.add("hidden");
-
+function closeEditModal(){
+    editModal.classList.add("hidden");
     editingId = null;
 }
 
 function updateReport(){
 
-    const name =
-        document.getElementById("editName").value;
+    const i = reports.findIndex(r => r.id === editingId);
+    if(i === -1) return;
 
-    const type =
-        document.getElementById("editType").value;
+    reports[i].name = editName.value;
+    reports[i].type = editType.value;
+    reports[i].severity = editSeverity.value;
+    reports[i].description = editDescription.value;
 
-    const severity =
-        document.getElementById("editSeverity").value;
+    localStorage.setItem("reports", JSON.stringify(reports));
 
-    const description =
-        document.getElementById("editDescription").value;
-
-    const index =
-        reports.findIndex(r => r.id === editingId);
-
-    if(index === -1) return;
-
-    reports[index] = {
-
-        ...reports[index],
-
-        name,
-
-        type,
-
-        severity,
-
-        description
-    };
-
-    localStorage.setItem(
-        "reports",
-        JSON.stringify(reports)
-    );
-
-    closeModal();
-
+    closeEditModal();
     renderReports();
 }
 
-function deleteReport(id){
+/////////////////////////////
+// DELETE
+/////////////////////////////
 
-    editingId = id;
-
-    document.getElementById("deleteModal")
-        .classList.remove("hidden");
+function openDelete(id){
+    deleteId = id;
+    deleteModal.classList.remove("hidden");
 }
 
 function confirmDelete(){
 
-    reports = reports.filter(
-        r => r.id !== editingId
-    );
+    reports = reports.filter(r => r.id !== deleteId);
 
-    localStorage.setItem(
-        "reports",
-        JSON.stringify(reports)
-    );
+    localStorage.setItem("reports", JSON.stringify(reports));
 
-    document.getElementById("deleteModal")
-        .classList.add("hidden");
-
-    editingId = null;
+    deleteId = null;
+    deleteModal.classList.add("hidden");
 
     renderReports();
 }
 
 function closeDeleteModal(){
-
-    document.getElementById("deleteModal")
-        .classList.add("hidden");
-
-    editingId = null;
+    deleteModal.classList.add("hidden");
+    deleteId = null;
 }
+
+/////////////////////////////
+// PDF
+/////////////////////////////
 
 async function exportPDF(id){
 
-    const report =
-        reports.find(r => r.id === id);
-
-    if(!report) return;
+    const r = reports.find(x => x.id === id);
+    if(!r) return;
 
     const { jsPDF } = window.jspdf;
-
     const doc = new jsPDF();
 
-    doc.setFontSize(22);
+    doc.text("REPORT", 20, 20);
+    doc.text(`ID: ${r.id}`, 20, 40);
+    doc.text(`Name: ${r.name}`, 20, 50);
+    doc.text(`Type: ${r.type}`, 20, 60);
+    doc.text(`Severity: ${r.severity}`, 20, 70);
+    doc.text(`User: ${r.user}`, 20, 80);
 
-    doc.text("CUSTOM REPORT", 20, 20);
-
-    doc.setFontSize(12);
-
-    doc.text(`ID: ${report.id}`, 20, 40);
-    doc.text(`Name: ${report.name}`, 20, 50);
-    doc.text(`Type: ${report.type}`, 20, 60);
-    doc.text(`Severity: ${report.severity}`, 20, 70);
-    doc.text(`Timestamp: ${report.timestamp}`, 20, 80);
-    doc.text(`User: ${report.user}`, 20, 90);
-
-    doc.text("Description:", 20, 110);
-
-    doc.text(report.description || "-", 20, 120);
-
-    doc.save(`report_${report.id}.pdf`);
+    doc.save(`report_${r.id}.pdf`);
 }
 
-function nextPage(){
-
-    const totalPages =
-        Math.ceil(reports.length / reportsPerPage);
-
-    if(currentPage < totalPages){
-
-        currentPage++;
-
-        renderReports();
-    }
-}
-
-function prevPage(){
-
-    if(currentPage > 1){
-
-        currentPage--;
-
-        renderReports();
-    }
-}
+/////////////////////////////
+// AUTO LOGIN
+/////////////////////////////
 
 if(localStorage.getItem("loggedUser")){
     showApp();
