@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1.0">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reporting System</title>
 
     <link rel="stylesheet" href="style.css">
@@ -15,163 +14,94 @@
 <div class="container">
 
     <!-- LOGIN -->
-
     <div id="loginSection" class="card">
 
         <h1>Login</h1>
 
         <div class="grid">
-
-            <input type="text"
-                id="username"
-                placeholder="Username">
-
-            <input type="password"
-                id="password"
-                placeholder="Password">
-
+            <input type="text" id="username" placeholder="Username">
+            <input type="password" id="password" placeholder="Password">
         </div>
 
         <br>
 
-        <button onclick="login()">
-            Login
-        </button>
+        <button onclick="login()">Login</button>
+
+        <p id="loginError" class="error-text"></p>
 
     </div>
 
     <!-- APP -->
-
     <div id="appSection" class="hidden">
 
         <div class="card">
-
             <div class="flex header">
-
                 <h1>Reporting System</h1>
-
-                <button class="logout-btn"
-                    onclick="logout()">
-
-                    Logout
-
-                </button>
-
+                <button class="logout-btn" onclick="logout()">Logout</button>
             </div>
-
         </div>
 
-        <!-- ADD REPORT -->
-
+        <!-- ADD -->
         <div class="card">
 
             <h2>Add Report</h2>
 
             <div class="grid">
-
-                <input type="text"
-                    id="reportName"
-                    placeholder="Report Name">
-
-                <input type="text"
-                    id="reportType"
-                    placeholder="Type">
+                <input type="text" id="reportName" placeholder="Report Name">
+                <input type="text" id="reportType" placeholder="Type">
 
                 <select id="reportSeverity">
-
-                    <option value="">
-                        Select Severity
-                    </option>
-
+                    <option value="">Select Severity</option>
                     <option>Low</option>
                     <option>Medium</option>
                     <option>High</option>
-
                 </select>
-
             </div>
 
             <br>
 
-            <textarea id="reportDescription"
-                placeholder="Description"></textarea>
+            <textarea id="reportDescription" placeholder="Description"></textarea>
 
             <br>
 
-            <button onclick="saveReport()">
-                Save Report
-            </button>
+            <button onclick="saveReport()">Save Report</button>
 
         </div>
 
         <!-- FILTERS -->
-
         <div class="card">
 
             <h2>Filters</h2>
 
-            <div class="grid">
+            <div class="filters-row">
 
-                <input type="text"
-                    id="filterName"
-                    placeholder="Filter by Name">
+                <input type="text" id="filterName" placeholder="Name" oninput="renderReports()">
+                <input type="text" id="filterType" placeholder="Type" oninput="renderReports()">
+                <input type="text" id="filterUser" placeholder="User" oninput="renderReports()">
+                <input type="text" id="filterDescription" placeholder="Description" oninput="renderReports()">
 
-                <input type="text"
-                    id="filterType"
-                    placeholder="Filter by Type">
-
-                <select id="filterSeverity">
-
-                    <option value="">
-                        All Severities
-                    </option>
-
+                <select id="filterSeverity" onchange="renderReports()">
+                    <option value="">Severity</option>
                     <option>Low</option>
                     <option>Medium</option>
                     <option>High</option>
-
                 </select>
 
-                <input type="date"
-                    id="filterFrom">
-
-                <input type="date"
-                    id="filterTo">
-
-                <select id="globalFilter">
-
-                    <option value="all">
-                        All Reports
-                    </option>
-
-                    <option value="personal">
-                        My Reports
-                    </option>
-
-                </select>
+                <input type="date" id="filterFrom" onchange="renderReports()">
+                <input type="date" id="filterTo" onchange="renderReports()">
 
             </div>
-
-            <br>
-
-            <button onclick="renderReports()">
-                Apply Filters
-            </button>
 
         </div>
 
         <!-- TABLE -->
-
         <div class="card">
 
             <h2>Reports</h2>
 
             <table>
-
                 <thead>
-
                     <tr>
-
                         <th>ID</th>
                         <th>Name</th>
                         <th>Type</th>
@@ -180,39 +110,48 @@
                         <th>Description</th>
                         <th>User</th>
                         <th>Actions</th>
-
                     </tr>
-
                 </thead>
 
                 <tbody id="reportTable"></tbody>
-
             </table>
 
+            <!-- PAGINATION -->
             <div class="pagination">
 
-                <button onclick="prevPage()">
-                    Previous
-                </button>
-            
-                <span id="pageInfo">
-                    Page 1
-                </span>
-            
-                <button onclick="nextPage()">
-                    Next
-                </button>
-            
+                <div class="pagination-left">
+                    <select id="reportsPerPageSelect" onchange="changeReportsPerPage()">
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                        <option value="15">15</option>
+                        <option value="20">20</option>
+                        <option value="25">25</option>
+                        <option value="30">30</option>
+                        <option value="35">35</option>
+                        <option value="40">40</option>
+                        <option value="50">50</option>
+                    </select>
+                </div>
+
+                <div class="pagination-center">
+                    <span id="pageInfo">Page 1 of 1</span>
+                </div>
+
+                <div class="pagination-right">
+                    <button onclick="prevPage()">Previous</button>
+                    <button onclick="nextPage()">Next</button>
+                </div>
+
             </div>
-            
+
         </div>
 
     </div>
 
 </div>
 
+<!-- MODALS -->
 <!-- EDIT MODAL -->
-
 <div id="editModal" class="modal hidden">
 
     <div class="modal-content">
@@ -221,40 +160,25 @@
 
         <div class="grid">
 
-            <input type="text"
-                id="editName"
-                placeholder="Report Name">
-
-            <input type="text"
-                id="editType"
-                placeholder="Type">
+            <input type="text" id="editName" placeholder="Name">
+            <input type="text" id="editType" placeholder="Type">
 
             <select id="editSeverity">
-
                 <option>Low</option>
                 <option>Medium</option>
                 <option>High</option>
-
             </select>
 
         </div>
 
         <br>
 
-        <textarea id="editDescription"></textarea>
+        <textarea id="editDescription" placeholder="Description"></textarea>
 
         <div class="modal-buttons">
 
-            <button onclick="updateReport()">
-                Save Changes
-            </button>
-
-            <button class="cancel-btn"
-                onclick="closeModal()">
-
-                Cancel
-
-            </button>
+            <button onclick="updateReport()">Save Changes</button>
+            <button onclick="closeEditModal()">Cancel</button>
 
         </div>
 
@@ -263,34 +187,18 @@
 </div>
 
 <!-- DELETE MODAL -->
-
 <div id="deleteModal" class="modal hidden">
 
     <div class="modal-content">
 
         <h2>Delete Report</h2>
 
-        <br>
-
-        <p>
-            Are you sure you want to delete this report?
-        </p>
+        <p>Are you sure you want to delete this report?</p>
 
         <div class="modal-buttons">
 
-            <button class="delete-btn"
-                onclick="confirmDelete()">
-
-                Delete
-
-            </button>
-
-            <button class="cancel-btn"
-                onclick="closeDeleteModal()">
-
-                Cancel
-
-            </button>
+            <button class="delete-btn" onclick="confirmDelete()">Delete</button>
+            <button class="cancel-btn" onclick="closeDeleteModal()">Cancel</button>
 
         </div>
 
@@ -298,10 +206,7 @@
 
 </div>
 
-<!-- jsPDF -->
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
 <script src="script.js"></script>
 
 </body>
