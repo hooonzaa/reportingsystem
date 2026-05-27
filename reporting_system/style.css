@@ -2,7 +2,7 @@
     margin:0;
     padding:0;
     box-sizing:border-box;
-    font-family:Arial, Helvetica, sans-serif;
+    font-family:Arial;
 }
 
 body{
@@ -23,13 +23,9 @@ body{
     margin-bottom:20px;
 }
 
-.hidden{
-    display:none !important;
-}
+.hidden{display:none !important;}
 
-h1,h2{
-    margin-bottom:15px;
-}
+h1,h2{margin-bottom:15px;}
 
 .grid{
     display:grid;
@@ -37,151 +33,153 @@ h1,h2{
     gap:10px;
 }
 
-.flex{
-    display:flex;
-    gap:10px;
-}
+.flex{display:flex;}
+.header{justify-content:space-between;align-items:center;}
 
-.header{
-    justify-content:space-between;
-    align-items:center;
-}
-
-input,
-select,
-textarea,
-button{
+input,select,textarea,button{
     width:100%;
     padding:10px;
     border-radius:8px;
     border:1px solid #ccc;
 }
 
-textarea{
-    resize:vertical;
-    min-height:100px;
-}
-
 button{
-    cursor:pointer;
-    border:none;
     background:#2563eb;
     color:white;
-    font-weight:bold;
-    transition:0.2s;
+    border:none;
+    cursor:pointer;
 }
 
-button:hover{
-    background:#1d4ed8;
-}
+button:hover{background:#1d4ed8;}
 
-.logout-btn{
-    width:auto;
-    background:#dc2626;
-}
+.logout-btn{background:#dc2626;width:auto;}
 
-.logout-btn:hover{
-    background:#b91c1c;
-}
-
-.delete-btn{
-    background:#dc2626;
-}
-
-.delete-btn:hover{
-    background:#b91c1c;
-}
-
-.cancel-btn{
-    background:#6b7280;
-}
-
-.cancel-btn:hover{
-    background:#4b5563;
-}
+.logout-btn:hover{background:#b91c1c;}
 
 table{
     width:100%;
     border-collapse:collapse;
-    margin-top:20px;
-}
-
-table th,
-table td{
-    padding:12px;
-    border-bottom:1px solid #ddd;
-    text-align:left;
-}
-
-table th{
-    background:#e5e7eb;
-}
-
-.actions{
-    display:flex;
-    gap:5px;
-}
-
-.badge{
-    padding:4px 8px;
-    border-radius:20px;
-    color:white;
-    font-size:12px;
-}
-
-.low{
-    background:green;
-}
-
-.medium{
-    background:orange;
-}
-
-.high{
-    background:red;
-}
-
-/* MODALS */
-
-.modal{
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,0.5);
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    z-index:999;
-}
-
-.modal-content{
-    background:white;
-    padding:25px;
-    border-radius:12px;
-    width:500px;
-    max-width:95%;
-}
-
-.modal-buttons{
-    display:flex;
-    gap:10px;
     margin-top:15px;
 }
 
-/* PAGINATION */
+th,td{
+    padding:12px;
+    border-bottom:1px solid #ddd;
+}
 
+th{background:#e5e7eb;}
+
+.actions{display:flex;gap:5px;}
+
+.delete-btn{background:#dc2626;}
+
+.delete-btn:hover{background:#b91c1c;}
+
+.pdf-btn{
+    background:#22c55e !important;
+}
+
+.pdf-btn:hover{
+    background:#16a34a !important;
+}
+
+/* FILTERS */
+.filters-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+}
+
+.filters-row input,
+.filters-row select{
+    flex:1;
+    min-width:160px;
+}
+
+/* PAGINATION */
 .pagination{
     display:flex;
-    justify-content:center;
+    justify-content:space-between;
     align-items:center;
-    gap:15px;
-    margin-top:20px;
+    margin-top:15px;
 }
 
-.pagination button{
-    width:auto;
-    padding:10px 20px;
+.pagination-left,
+.pagination-center,
+.pagination-right{
+    flex:1;
+    display:flex;
+    align-items:center;
 }
 
-#pageInfo{
+.pagination-left{justify-content:flex-start;}
+.pagination-center{justify-content:center;font-weight:bold;}
+.pagination-right{justify-content:flex-end;gap:10px;}
+
+.pagination select{width:100px;}
+
+/* BADGES */
+.badge{
+    padding:4px 10px;
+    border-radius:20px;
+    color:white;
+    font-size:12px;
     font-weight:bold;
+}
+
+.low{background:#22c55e;}
+.medium{background:#f59e0b;}
+.high{background:#ef4444;}
+
+/* ERROR */
+.error-text{
+    color:red;
+    margin-top:10px;
+    font-weight:bold;
+}
+
+.input-error{
+    border:2px solid red !important;
+}
+
+.modal{
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background: rgba(0,0,0,0.6);
+
+    z-index: 99999;
+}
+
+/* SKRYTÝ MODAL */
+.modal.hidden{
+    display: none !important;
+}
+
+/* OBSAH MODALU */
+.modal-content{
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    width: 500px;
+    max-width: 95%;
+
+    position: relative;
+    z-index: 100000;
+
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+}
+
+/* BUTTONS */
+.modal-buttons{
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
 }
