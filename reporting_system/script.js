@@ -12,10 +12,21 @@ const Severity = Object.freeze({
 // USERS
 /////////////////////////////
 
+class User {
+    constructor(username, password) {
+        this.username = username;
+        this.password = password;
+    }
+
+    checkPassword(inputPassword) {
+        return this.password === inputPassword;
+    }
+}
+
 const USERS = [
-    { username: "Eliáš", password: "Heslo1" },
-    { username: "Švarc", password: "Heslo2" },
-    { username: "Gras", password: "Heslo3" }
+    new User("Eliáš", "Heslo1"),
+    new User("Švarc", "Heslo2"),
+    new User("Gras", "Heslo3")
 ];
 
 /////////////////////////////
