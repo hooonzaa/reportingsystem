@@ -1,16 +1,12 @@
-/////////////////////////////
-// ENUM
-/////////////////////////////
-
 const Severity = Object.freeze({
     LOW: "Low",
     MEDIUM: "Medium",
     HIGH: "High"
 });
 
-/////////////////////////////
-// USERS
-/////////////////////////////
+// ==========================================
+// CLASSES
+// ==========================================
 
 class User {
     constructor(username, password) {
@@ -22,16 +18,6 @@ class User {
         return this.password === inputPassword;
     }
 }
-
-const USERS = [
-    new User("Eliáš", "Heslo1"),
-    new User("Švarc", "Heslo2"),
-    new User("Gras", "Heslo3")
-];
-
-/////////////////////////////
-// CLASS
-/////////////////////////////
 
 class Report {
     constructor(name, type, severity, description, user) {
@@ -45,140 +31,183 @@ class Report {
     }
 }
 
-/////////////////////////////
-// DATA
-/////////////////////////////
 
-let reports = JSON.parse(localStorage.getItem("reports")) || [];
+class ReportManager {
+    constructor() {
+        this.reports = JSON.parse(localStorage.getItem("reports")) || [];
+    }
+
+    saveToStorage() {
+        localStorage.setItem("reports", JSON.stringify(this.reports));
+    }
+
+    addReport(name, type, severity, description, user) {
+        const newReport = new Report(name, type, severity, description, user);
+        this.reports.push(newReport);
+        this.saveToStorage();
+        return newReport;
+    }
+
+    updateReport(id, updatedFields) {
+        const index = this.reports.findIndex(r => r.id === id);
+        if (index === -1) return false;
+
+        // Merge existing properties with updated fields safely
+        this.reports[index] = { ...this.reports[index], ...updatedFields };
+        this.saveToStorage();
+        return true;
+    }
+
+    deleteReport(id) {
+        this.reports = this.reports.filter(r => r.id !== id);
+        this.saveToStorage();
+    }
+
+    findReport(id) {
+        return this.reports.find(r => r.id === id);
+    }
+
+    getFilteredReports(filters) {
+        const { name, type, user, desc, severity } = filters;
+        return this.reports.filter(r => {
+            return (
+                (!name || r.name.toLowerCase().includes(name)) &&
+                (!type || r.type.toLowerCase().includes(type)) &&
+                (!user || r.user.toLowerCase().includes(user)) &&
+                (!desc || r.description.toLowerCase().includes(desc)) &&
+                (!severity || r.severity === severity)
+            );
+        });
+    }
+}
+
+
+const USERS = [
+    new User("Eliáš", "Heslo1"),
+    new User("Švarc", "Heslo2"),
+    new User("Gras", "Heslo3")
+];
+
+const reportManager = new ReportManager();
 
 let editingId = null;
 let deleteId = null;
-
 let currentPage = 1;
 let reportsPerPage = parseInt(localStorage.getItem("reportsPerPage")) || 5;
 
-/////////////////////////////
-// LOGIN
-/////////////////////////////
+// ==========================================
+// AUTHENTICATION
+// ==========================================
 
-function login(){
-
+function login() {
     const u = document.getElementById("username");
     const p = document.getElementById("password");
     const err = document.getElementById("loginError");
 
     err.innerText = "";
 
-    const user = USERS.find(x =>
-        x.username === u.value && x.password === p.value
-    );
+    const user = USERS.find(x => x.username === u.value && x.checkPassword(p.value));
 
-    if(!user){
+    if (!user) {
         err.innerText = "Incorrect username or password.";
         u.classList.add("input-error");
         p.classList.add("input-error");
         return;
     }
 
-    localStorage.setItem("loggedUser", JSON.stringify({username:u.value}));
+    localStorage.setItem("loggedUser", JSON.stringify({ username: u.value }));
     showApp();
 }
 
-function logout(){
+function logout() {
     localStorage.removeItem("loggedUser");
     location.reload();
 }
 
-function currentUser(){
+function currentUser() {
     return JSON.parse(localStorage.getItem("loggedUser"));
 }
 
-function showApp(){
+function showApp() {
     loginSection.classList.add("hidden");
     appSection.classList.remove("hidden");
-
     reportsPerPageSelect.value = reportsPerPage;
-
     renderReports();
 }
 
-/////////////////////////////
-// SAVE
-/////////////////////////////
+// ==========================================
+// OPERATIONS
+// ==========================================
 
-function saveReport(){
-
-    reports.push(new Report(
+function saveReport() {
+    reportManager.addReport(
         reportName.value,
         reportType.value,
         reportSeverity.value,
         reportDescription.value,
         currentUser().username
-    ));
+    );
 
-    localStorage.setItem("reports", JSON.stringify(reports));
     renderReports();
 }
 
-/////////////////////////////
-// PAGINATION
-/////////////////////////////
+function updateReport() {
+    const success = reportManager.updateReport(editingId, {
+        name: editName.value,
+        type: editType.value,
+        severity: editSeverity.value,
+        description: editDescription.value
+    });
 
-function changeReportsPerPage(){
+    if (success) {
+        closeEditModal();
+        renderReports();
+    }
+}
+
+function confirmDelete() {
+    reportManager.deleteReport(deleteId);
+    closeDeleteModal();
+    renderReports();
+}
+
+// ==========================================
+// PAGINATION
+// ==========================================
+
+function changeReportsPerPage() {
     reportsPerPage = +reportsPerPageSelect.value;
     localStorage.setItem("reportsPerPage", reportsPerPage);
     currentPage = 1;
     renderReports();
 }
 
-function nextPage(){
-    currentPage++;
-    renderReports();
-}
+function nextPage() { currentPage++; renderReports(); }
+function prevPage() { currentPage--; renderReports(); }
 
-function prevPage(){
-    currentPage--;
-    renderReports();
-}
-
-/////////////////////////////
-// RENDER
-/////////////////////////////
-
-function renderReports(){
-
+function renderReports() {
     const tbody = document.getElementById("reportTable");
     tbody.innerHTML = "";
 
-    const name = filterName.value.toLowerCase().trim();
-    const type = filterType.value.toLowerCase().trim();
-    const user = filterUser.value.toLowerCase().trim();
-    const desc = filterDescription.value.toLowerCase().trim();
-    const severity = filterSeverity.value;
+    const filters = {
+        name: filterName.value.toLowerCase().trim(),
+        type: filterType.value.toLowerCase().trim(),
+        user: filterUser.value.toLowerCase().trim(),
+        desc: filterDescription.value.toLowerCase().trim(),
+        severity: filterSeverity.value
+    };
 
-    const filtered = reports.filter(r => {
-
-        return (
-            (!name || r.name.toLowerCase().includes(name)) &&
-            (!type || r.type.toLowerCase().includes(type)) &&
-            (!user || r.user.toLowerCase().includes(user)) &&
-            (!desc || r.description.toLowerCase().includes(desc)) &&
-            (!severity || r.severity === severity)
-        );
-    });
-
+    const filtered = reportManager.getFilteredReports(filters);
     const totalPages = Math.max(1, Math.ceil(filtered.length / reportsPerPage));
 
-    if(currentPage > totalPages) currentPage = totalPages;
-    if(currentPage < 1) currentPage = 1;
+    if (currentPage > totalPages) currentPage = totalPages;
+    if (currentPage < 1) currentPage = 1;
 
-    const start = (currentPage-1)*reportsPerPage;
-    const pageItems = filtered.slice(start, start+reportsPerPage);
+    const start = (currentPage - 1) * reportsPerPage;
+    const pageItems = filtered.slice(start, start + reportsPerPage);
 
     pageItems.forEach(r => {
-
         const sev = r.severity.toLowerCase();
-
         const tr = document.createElement("tr");
 
         tr.innerHTML = `
@@ -190,31 +219,26 @@ function renderReports(){
             <td>${r.description}</td>
             <td>${r.user}</td>
             <td class="actions">
-
                 <button onclick="editReport(${r.id})">Edit</button>
                 <button class="delete-btn" onclick="openDelete(${r.id})">Delete</button>
                 <button class="pdf-btn" onclick="exportPDF(${r.id})">PDF</button>
-
             </td>
         `;
-
         tbody.appendChild(tr);
     });
 
     pageInfo.innerText = `Page ${currentPage} of ${totalPages}`;
 }
 
-/////////////////////////////
-// EDIT
-/////////////////////////////
+// ==========================================
+// MODALS & AUXILIARY
+// ==========================================
 
-function editReport(id){
-
-    const r = reports.find(x => x.id === id);
-    if(!r) return;
+function editReport(id) {
+    const r = reportManager.findReport(id);
+    if (!r) return;
 
     editingId = id;
-
     editName.value = r.name;
     editType.value = r.type;
     editSeverity.value = r.severity;
@@ -223,61 +247,24 @@ function editReport(id){
     editModal.classList.remove("hidden");
 }
 
-function closeEditModal(){
+function closeEditModal() {
     editModal.classList.add("hidden");
     editingId = null;
 }
 
-function updateReport(){
-
-    const i = reports.findIndex(r => r.id === editingId);
-    if(i === -1) return;
-
-    reports[i].name = editName.value;
-    reports[i].type = editType.value;
-    reports[i].severity = editSeverity.value;
-    reports[i].description = editDescription.value;
-
-    localStorage.setItem("reports", JSON.stringify(reports));
-
-    closeEditModal();
-    renderReports();
-}
-
-/////////////////////////////
-// DELETE
-/////////////////////////////
-
-function openDelete(id){
+function openDelete(id) {
     deleteId = id;
     deleteModal.classList.remove("hidden");
 }
 
-function confirmDelete(){
-
-    reports = reports.filter(r => r.id !== deleteId);
-
-    localStorage.setItem("reports", JSON.stringify(reports));
-
-    deleteId = null;
-    deleteModal.classList.add("hidden");
-
-    renderReports();
-}
-
-function closeDeleteModal(){
+function closeDeleteModal() {
     deleteModal.classList.add("hidden");
     deleteId = null;
 }
 
-/////////////////////////////
-// PDF
-/////////////////////////////
-
-async function exportPDF(id){
-
-    const r = reports.find(x => x.id === id);
-    if(!r) return;
+async function exportPDF(id) {
+    const r = reportManager.findReport(id);
+    if (!r) return;
 
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
@@ -292,10 +279,7 @@ async function exportPDF(id){
     doc.save(`report_${r.id}.pdf`);
 }
 
-/////////////////////////////
 // AUTO LOGIN
-/////////////////////////////
-
-if(localStorage.getItem("loggedUser")){
+if (localStorage.getItem("loggedUser")) {
     showApp();
 }
