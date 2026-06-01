@@ -3,10 +3,11 @@ GRAS,SVARC,ELIAS
 
 
 How to launch :
-1. Install the contents of the repository (html, js, css)
-2. Put them into one folder
-3. Launch index.html
-4. Log in with one of the users listed below.
+1. Install the contents of the repository (rar)
+2. Extract the rar file.
+3. Launch ReportSystem/WebApplication1/WebApplication1/WebApplication1.sln inside of a Visual Studio Community.
+4. Launch the backend with F5.
+5. Launch ReportSystem/index.html
 
 Users :
 
@@ -18,3 +19,6 @@ Password : Heslo2
 
 Username : Gras
 Password : Heslo3
+
+Username : admin
+Password : admin123
